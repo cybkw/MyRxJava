@@ -1,0 +1,78 @@
+-----------------------RxJava手写阶段---------------------------------
+一、手写create操作符
+Observable.create -->订阅-->观察者Observer
+
+二、手写create操作符之增加读写模式
+1.怎样区分读写模式?怎么区分是上限和下限的方式？
+答：在方法参数中（定义时），show2(TestPerson<? super Student> test) 一定是上限和下限。
+   （使用时）在真正使用到泛型中，就是读写模式。
+
+
+三、手写just操作符
+create操作符，是使用者自己去发送事件的。
+
+just是方法内部去发送事件的。
+阅读just源码还是从subscribe方法入口看起。
+subscribe()-- just(内部发送事件，根据用户传递的参数)--observer.onNext()--观察者处理
+
+
+四、手写map操作符。
+map操作符是在RxJava过程中变换
+上游----》 变换操作 (流向时变换)---------》下游
+线性发送事件，在过程中对事件进行额外操作，下游接收最后的结果。
+Observable.create--map转换处理--订阅--观察者。
+4.1.变换操作符，只管上一层给的类型，把上一层类型变换为新的类型--》传递给下一层
+2.map需要拥有上一层的能力以及拥有下一层observer观察者的能力
+
+
+五、RxJava手写之map和create的流程详解
+看RxJava的源码，先倒着走（从右往左），然后顺着事件流向走（从左往右）。
+
+(从右往左)
+订阅--》observer.onSubscriber()-->source.subscribe(observer)-->ObservableMap.subscribe(会包裹一层，给上一层)
+
+(从左往右)
+--》最顶层的被观察者上游（使用者自己发送的）-->MapObserver.onNext() ---> 最右边的观察者.onNext();
+
+
+
+RxJava回顾：
+1.RxJava的概念 和 标准观察者设计模式（多个观察者，注册多次）  -- RxJava中的观察者设计模式(不标准 变异)（一个观察者，订阅一次）。
+ 2.RxJava上游和下游，
+ 3.RxJava创建型操作符。 创建（被观察者） create just fromArray ...
+ 4.RxJava变换型操作符。 上一层的事件类型 变换 下一层需要的事件类型
+ 5.RxJava过滤型操作符。 上一层的事件，过滤筛选  给下一层
+ 6.RxJava条件型操作符。 把上一层的事件 ，是否满足条件  给下一层 Boolean
+ 7.RxJava合并型操作符。 把多个被观察者 合并成一个被观察者  --- 》 发射事件
+ 8.RxJava异常型操作符。 上一层发射事件 异常的处理  异常操作符 -- try   ----》 下一层。
+ 9.RxJava线程的切换。 默认情况下main线程， 异步线程io， 主线程AndroidSchedulers.mainThread()
+                     给上游分配多次，只会在第一次切换，后面的不切换了 （只在第一次有效）
+                     给下游分配多次，每次都会去切换 （每次都会有效）
+ 10.背压  上游大量的发射事件，下游处理（阻塞）不过来，就会考虑到我们背压模式(ERROR, BUFFER)
+ 11.RxJava Flowable --- Observable
+ 12.RxJava配合Retrofit+OkHttp
+ 13.RxJava泛型 上限和下限，读写模式
+ 14.RxJava手写create操作符, 就是一个接口回调。
+ 15.RxJava手写create操作符的读写模式。(在方法参数中：一定是上限和下限,   真正的使用到了泛型操作：读写模式)
+ 16.RxJava手写jsut操作符，就是一个接口回调，在just方法里面调用的。
+ 17.RxJava手写map操作符。变换操作符
+ 18.RxJava手写map+create+observer操作符流程讲解，从订阅到上游，然后再从上游到下游
+ 19.RxJava回顾
+
+核心内容：
+变换操作符，异常操作符，线程切换，背压模式的Buffer/Error，泛型的读写模式，手写map操作符/map+create+observer操作符流程
+
+难点内容：
+map+create+observer操作符流程
+
+
+
+-----------------------------------------------------------------
+RxJava线程切换
+1.为什么RxJava默认是在主线程？
+答：因为subscribe订阅操作默认就是在Activity中执行的，ActivityThread创建后默认会有一个当前线程的主HandlerLooper,
+所以被观察者和观察者默认都是在主线程中的。
+
+
+
+
